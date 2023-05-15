@@ -16,7 +16,7 @@ CUDA_SASS_INSTRUCTION_COUNTER_FLOPS: Dict[str, float] = {
 }
 
 
-class CuptiCounterAnalysis:
+class CountersAnalysis:
     def __init__(self):
         pass
 
@@ -26,6 +26,7 @@ class CuptiCounterAnalysis:
         t: "Trace",
         rank: int,
         cg: CallGraph,
+        stringify: bool = True,
     ) -> Optional[pd.DataFrame]:
         sym_table = t.symbol_table.get_sym_table()
         sym_index = t.symbol_table.get_sym_id_map()
@@ -105,6 +106,9 @@ class CuptiCounterAnalysis:
             lambda ops: get_top_or_bottom_op(ops, top=False)
         )
 
+        if not stringify:
+            return gpu_kernels
+
         # add back strings for readability
         for col in ["cat", "name"]:
             gpu_kernels[col] = gpu_kernels[col].apply(
@@ -127,12 +131,14 @@ class CuptiCounterAnalysis:
         cls,
         t: "Trace",
         ranks: Optional[List[int]] = None,
+        stringify: bool = True,
     ) -> List[pd.DataFrame]:
         """Correlates the Kernel counter events with pytorch operators using
         the callgraph.
         Args:
             t (Trace): trace object
             ranks (List[int]): List of ranks on which to run the analysis. Default = [0].
+            stringify (bool): Add back string to symbol IDs for kernels/operators.
         Returns:
             A list of dataframes, one per rank, containing kernel name,
             op_stack (operator stack), top and bottom level op, and columns
@@ -156,7 +162,9 @@ class CuptiCounterAnalysis:
         cg = CallGraph(t)
 
         result_list = [
-            cls._get_counter_data_with_operators_for_rank(t=t, rank=rank, cg=cg)
+            cls._get_counter_data_with_operators_for_rank(
+                t=t, rank=rank, cg=cg, stringify=stringify
+            )
             for rank in ranks
         ]
 

@@ -12,7 +12,6 @@ import queue
 import re
 import sys
 import time
-import tracemalloc
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
@@ -20,7 +19,7 @@ import pandas as pd
 from hta.common.trace_file import get_trace_files
 from hta.configs.config import logger
 from hta.configs.default_values import DEFAULT_TRACE_DIR
-from hta.utils.utils import get_mp_pool_size, normalize_path
+from hta.utils.utils import get_memory_usage, normalize_path
 
 MetaData = Dict[str, Any]
 PHASE_COUNTER: str = "C"
@@ -115,7 +114,10 @@ def parse_trace_dict(trace_file_path: str) -> Dict[str, Any]:
             f"expect the value of trace_file ({trace_file_path}) ends with '.gz' or 'json'"
         )
     t_end = time.perf_counter()
-    logger.info(f"Parsed {trace_file_path} time = {(t_end - t_start):.2f} seconds ")
+    logger.info(
+        f"Parsed {trace_file_path} time = {(t_end - t_start):.2f} seconds "
+        f"mem = {get_memory_usage(trace_record) / 1e6:.2f} MB"
+    )
     return trace_record
 
 
@@ -346,9 +348,7 @@ def parse_trace_dataframe(
         add_iteration(df, local_symbol_table)
 
     t_end = time.perf_counter()
-    logger.debug(
-        f"Parsed {trace_file_path} in {(t_end - t_start):.2f} seconds; current PID:{os. getpid()}"
-    )
+    logger.debug(f"Parsed {trace_file_path} in {(t_end - t_start):.2f} seconds")
     return meta, df, local_symbol_table
 
 
@@ -410,7 +410,7 @@ class Trace:
         if self.is_parsed:
             logger.warning("Traces are already parsed and loaded!")
             return
-        self.parse_traces()
+        self.parse_traces(use_multiprocessing=False)
         self.align_and_filter_trace()
         for rank, trace_df in self.traces.items():
             df = self.traces[rank].set_index("index", drop=False)
@@ -472,17 +472,8 @@ class Trace:
             logger.debug(f"finished parsing for all {len(ranks)} ranks")
         else:
             num_procs = min(mp.cpu_count(), len(ranks))
-            if len(ranks) <= 8:
-                num_procs = min(len(ranks), mp.cpu_count())
-            else:
-                tracemalloc.start()
-                parse_trace_dataframe(trace_paths[0])
-                current, peak = tracemalloc.get_traced_memory()
-                tracemalloc.stop()
-                num_procs = get_mp_pool_size(peak, len(ranks))
             logger.debug(f"using {num_procs} processes for parsing.")
-
-            with mp.get_context("fork").Pool(num_procs) as pool:
+            with mp.get_context("spawn").Pool(num_procs) as pool:
                 results = pool.map(parse_trace_dataframe, trace_paths)
                 pool.close()
                 pool.join()
@@ -643,6 +634,8 @@ class Trace:
         """
         Align dataframes for all ranks such that the earliest event starts at time 0.
         """
+        # in this function the 
+        print("DEBUG: self.traces[0]: ", len(self.traces))
         self.min_ts = min(trace_df["ts"].min() for trace_df in self.traces.values())
         for rank, trace_df in self.traces.items():
             trace_df["ts"] = trace_df["ts"] - self.min_ts
