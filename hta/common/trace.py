@@ -151,6 +151,15 @@ def compress_df(df: pd.DataFrame) -> Tuple[pd.DataFrame, TraceSymbolTable]:
         "correlation",
         "Trace iteration",
         "memory bandwidth (GB/s)",
+        #extra data field
+        "grid",
+        "block",
+        "warps per SM",
+        "blocks per SM",
+        "shared memory",
+        "registers per thread",
+        "est. achieved occupancy %"
+
     }
     # performance counters appear as args
     if "cuda_profiler_range" in df.cat.unique():
