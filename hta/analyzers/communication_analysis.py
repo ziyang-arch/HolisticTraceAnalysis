@@ -90,9 +90,9 @@ class CommunicationAnalysis:
             gpu_kernels["kernel_type"] = gpu_kernels[["name"]].apply(
                 lambda x: get_kernel_type(sym_table[x["name"]]), axis=1
             )
-            import os
-            os.makedirs(os.path.dirname("./hta_tmp"), exist_ok=True)
-            gpu_kernels.to_csv("./hta_tmp/gpu_kernels.csv")
+            #import os
+            #os.makedirs(os.path.dirname("./hta_tmp"), exist_ok=True)
+            #gpu_kernels.to_csv("./hta_tmp/gpu_kernels.csv")
             # Isolate communication and computation kernels and merge each one of them.
             comp_kernels = merge_kernel_intervals(
                 gpu_kernels[
@@ -122,7 +122,7 @@ class CommunicationAnalysis:
                 .reset_index(drop=True)
             )
             status_df["running"] = status_df["status"].cumsum()
-            status_df.to_csv("./hta_tmp/status_df.csv")
+            #status_df.to_csv("./hta_tmp/status_df.csv")
             # Time intervals when status is 3 indicate overlapping communication and computation kernels.
             overlap = status_df[status_df["running"].eq(3)]
             shifted_overlap = overlap.merge(

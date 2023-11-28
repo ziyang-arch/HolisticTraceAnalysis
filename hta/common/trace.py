@@ -152,8 +152,6 @@ def compress_df(df: pd.DataFrame) -> Tuple[pd.DataFrame, TraceSymbolTable]:
         "Trace iteration",
         "memory bandwidth (GB/s)",
         #extra data field
-        "grid",
-        "block",
         "warps per SM",
         "blocks per SM",
         "shared memory",
@@ -168,10 +166,36 @@ def compress_df(df: pd.DataFrame) -> Tuple[pd.DataFrame, TraceSymbolTable]:
         )
         args_to_keep = args_to_keep.union(counter_names)
 
+    # add columns of grid_x/y/z, block_x/y/z
+    print("type of df[args]: ", type(df["args"]))
+    #print(df["args"][df["args"].get('grid', -1) !=-1])
+
+    df['grid_x']=df["args"].apply( 
+        lambda row: row.get('grid', [-1, -1, -1])[0] if isinstance(row, dict) else -1
+       )
+    df['grid_y']=df["args"].apply( 
+        lambda row: row.get('grid', [-1, -1, -1])[1] if isinstance(row, dict) else -1
+       )
+    df['grid_z']=df["args"].apply( 
+        lambda row: row.get('grid', [-1, -1, -1])[2] if isinstance(row, dict) else -1
+       )
+    df['block_x']=df["args"].apply( 
+        lambda row: row.get('block', [-1, -1, -1])[0] if isinstance(row, dict) else -1
+       )
+    df['block_y']=df["args"].apply( 
+        lambda row: row.get('block', [-1, -1, -1])[1] if isinstance(row, dict) else -1
+       )
+    df['block_z']=df["args"].apply(
+        lambda row: row.get('block', [-1, -1, -1])[2] if isinstance(row, dict) else -1
+       )
+
+
+
     for arg in args_to_keep:
         df[arg] = df["args"].apply(
             lambda row: row.get(arg, -1) if isinstance(row, dict) else -1
         )
+    #df.drop(["grid"], axis=1, inplace=True)
     df.drop(["args"], axis=1, inplace=True)
     df.rename(columns={"memory bandwidth (GB/s)": "memory_bw_gbps"}, inplace=True)
 
