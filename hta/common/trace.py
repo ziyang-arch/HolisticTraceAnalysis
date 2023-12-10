@@ -196,6 +196,7 @@ def compress_df(df: pd.DataFrame) -> Tuple[pd.DataFrame, TraceSymbolTable]:
             lambda row: row.get(arg, -1) if isinstance(row, dict) else -1
         )
     #df.drop(["grid"], axis=1, inplace=True)
+
     df.drop(["args"], axis=1, inplace=True)
     df.rename(columns={"memory bandwidth (GB/s)": "memory_bw_gbps"}, inplace=True)
 

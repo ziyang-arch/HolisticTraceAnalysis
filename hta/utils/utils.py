@@ -174,3 +174,29 @@ def flatten_column_names(df: pd.DataFrame) -> None:
     """Flatten a DataFrame's a multiple index column names to a single string"""
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = ["_".join(col).rstrip("_") for col in df.columns]
+
+
+
+
+def set_idle_after_strict(kernels):
+    '''
+    inplace value of idle_after
+    '''
+    
+    kernel_end=kernels['ts']+kernels['dur']
+    kernel_start_next= kernels['ts'][1:]
+    
+    #kernel_start=np.insert(kernel_start, -1, kernels['ts'].values[-1])
+    idle_after=[]
+    n=kernel_start_next.shape[0]
+    for idx, endt in enumerate(kernel_end):
+        newi=idx
+        while newi<n and endt > kernel_start_next.iloc[newi]:
+            newi=newi+1
+        if newi==n:
+            idle_after.append(0)
+        else:
+            idle_after.append(kernel_start_next.iloc[newi]-endt)
+    
+    #idle_after=kernel_start- kernel_end
+    kernels['idle_after']=idle_after

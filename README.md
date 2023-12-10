@@ -1,3 +1,15 @@
+# Interpretive Trace Analysis
+
+
+This project is derived from [HTA](https://github.com/facebookresearch/HolisticTraceAnalysis)
+
+## Idleness Interpretation
+
+There are substantial amount of idleness can be spotted in modern machine learning  workloads. They are 
+
+
+
+
 [![CircleCI](https://circleci.com/gh/facebookresearch/HolisticTraceAnalysis.svg?style=shield)](https://app.circleci.com/pipelines/github/facebookresearch/HolisticTraceAnalysis)
 [![codecov](https://codecov.io/github/facebookresearch/holistictraceanalysis/branch/main/graph/badge.svg?token=R44P6M3RJN)](https://codecov.io/github/facebookresearch/holistictraceanalysis)
 [![Docs](https://readthedocs.org/projects/hta/badge/?version=latest)](https://hta.readthedocs.io/en/latest/?badge=latest)

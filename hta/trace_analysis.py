@@ -12,12 +12,15 @@ from hta.analyzers.breakdown_analysis import BreakdownAnalysis
 from hta.analyzers.communication_analysis import CommunicationAnalysis
 from hta.analyzers.counters_analysis import CountersAnalysis
 from hta.analyzers.cuda_kernel_analysis import CudaKernelAnalysis
+from hta.analyzers.idleness_interpretation import IdlenessInterpretation
 from hta.analyzers.straggler import find_stragglers_with_late_start_comm_kernels
 from hta.analyzers.straggler_analysis import StragglerAnalysis
 from hta.analyzers.trace_counters import TraceCounters
 from hta.common.trace import Trace
 from hta.configs.config import logger
 from hta.configs.default_values import DEFAULT_TRACE_DIR
+
+from hta.utils.utils import set_idle_after_strict
 
 
 class TimeSeriesTypes(Flag):
@@ -35,11 +38,25 @@ class TraceAnalysis:
         self.t.load_traces()
         assert self.t.is_parsed is True
 
+    def set_verbose_info(self):
+        r"""
+        add extra info to the basic dataframes
+        """
+        for df_key in self.t.traces:
+            df=self.t.traces[df_key]
+            #add end
+            df['end']=df['ts']+df['dur']
+            # idleness after
+            set_idle_after_strict(df)
+        
+        
+        
+
     def get_idle_distribution(self, visualize: bool = False) -> pd.DataFrame:
         r"""
         the distribution and duration of idle time in the comp and comm time
         """
-        return CommunicationAnalysis.get_idle_distribution(self.t, visualize)
+        return IdlenessInterpretation.get_idle_distribution(self.t, visualize)
 
 
     def get_comm_comp_overlap(self, visualize: bool = True) -> pd.DataFrame:

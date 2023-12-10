@@ -20,60 +20,7 @@ class CommunicationAnalysis:
     def __init__(self):
         pass
 
-    @classmethod
-    def get_idle_distribution(cls, t: "Trace", visualize: bool = True) -> pd.DataFrame:
-        """
-        get idle distribution on event level, 
-
-        """
-        sym_table = t.symbol_table.get_sym_table()
-        def idleness_inbetween(kernel):
-            '''
-            input dataframe of 'ts' and 'end' of a trace
-            '''
-            kernel.sort_values("ts", inplace=True)
-            idle_in=kernel['ts'].iloc[1:]-kernel['end'].iloc[0:-1].values
-            dur_total=kernel['end'].max()-kernel['ts'].min()
-            dur_idle= idle_in.sum()
-            idle_prct=dur_idle/dur_total
-            return idle_prct, idle_in
-        def get_idle_distribution_value(trace_df: pd.DataFrame) -> float:
-            '''
-            return tuple(comp_idleness_in: DataFrame, comm_idleness_in: DataFrame)
-            '''
-            gpu_kernels = trace_df[trace_df["stream"].ne(-1)].copy()
-            gpu_kernels["kernel_type"] = gpu_kernels[["name"]].apply(
-                lambda x: get_kernel_type(sym_table[x["name"]]), axis=1
-            )
-            comp_kernels = merge_kernel_intervals(
-                gpu_kernels[
-                    gpu_kernels["kernel_type"].eq(KernelType.COMPUTATION.name)
-                ].copy()
-            )
-            comm_kernels = merge_kernel_intervals(
-                gpu_kernels[
-                    gpu_kernels["kernel_type"].eq(KernelType.COMMUNICATION.name)
-                ].copy()
-            )
-            return idleness_inbetween(comp_kernels), idleness_inbetween(comm_kernels)
-        
-        
-        result: Dict[str, List[pd.DataFrame]] = defaultdict(list)
-        for rank, trace_df in t.traces.items():
-            result["rank"].append(rank)
-            idle_in_item=idleness_inbetween(trace_df)
-            result["idle_in"].append(
-                idle_in_item[0][0],
-                idle_in_item[1][0]
-            )
-            result["idle_in_pctg"].append(
-                idle_in_item[0][1],
-                idle_in_item[1][1]
-            )
-            print("rank: ", rank)
-            print("idle_in:\n", result["idle_in"][-1])
-        result_df = pd.DataFrame(result)
-        return result_df
+    
     @classmethod
     def get_comm_comp_overlap(cls, t: "Trace", visualize: bool = True) -> pd.DataFrame:
         """
