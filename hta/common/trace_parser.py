@@ -356,7 +356,12 @@ def _parse_trace_dataframe_json(
         df["index"] = pd.to_numeric(df["index"], downcast="integer")
 
         df, local_symbol_table = _compress_df(df, cfg)
-
+    if "baseTimeNanoseconds" in trace_record:
+        #print("baseTimeNanoseconds:", trace_record["baseTimeNanoseconds"])
+        df["ts"]=df["ts"]+trace_record["baseTimeNanoseconds"]/1000
+    if "displayTimeUnit" in trace_record:
+        #print("displayTimeUnit:", trace_record["displayTimeUnit"])
+        pass
     return meta, df, local_symbol_table
 
 
